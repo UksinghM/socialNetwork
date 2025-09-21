@@ -26,30 +26,140 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <title>News Feed</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+        .navbar {
+            background: #fff;
+            color: #333;
+            padding: 0 20px;
+            border-bottom: 1px solid #ddd;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .navbar a {
+            color: #007bff;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .navbar .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .container {
+            width: 100%;
+            max-width: 680px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+        .post-card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .post-header img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+        .post-header strong {
+            font-size: 16px;
+        }
+        .post-content p {
+            font-size: 15px;
+            line-height: 1.5;
+            margin: 0 0 15px 0;
+        }
+        .post-content img {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        .post-footer {
+            color: #65676b;
+            font-size: 13px;
+        }
+        .post-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+            margin-top: 15px;
+        }
+        .post-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            color: #65676b;
+            padding: 0;
+        }
+        .post-actions button:hover {
+            text-decoration: underline;
+        }
+        .post-actions span {
+            font-size: 14px;
+            color: #65676b;
+        }
+    </style>
 </head>
 <body>
-    <h2>News Feed</h2>
-    <a href="profile.php">My Profile</a> | 
-    <a href="logout.php">Logout</a>
-    <hr>
-
-    <?php foreach ($posts as $post): ?>
-        <div style="border:1px solid #ccc; padding:10px; margin:10px 0;">
-            <p><strong><?= htmlspecialchars($post["full_name"]) ?></strong></p>
-            <img src="../uploads/<?= htmlspecialchars($post["profile_pic"]) ?>" width="50" style="border-radius:50%;"><br>
-            <p><?= htmlspecialchars($post["description"]) ?></p>
-            <?php if ($post["image"]): ?>
-                <img src="../uploads/<?= htmlspecialchars($post["image"]) ?>" width="200"><br>
-            <?php endif; ?>
-            <small>Posted on <?= $post["created_at"] ?></small><br>
-
-            <!-- Like / Dislike buttons -->
-            <button class="like-btn" data-post="<?= $post["id"] ?>">👍 Like</button>
-            <button class="dislike-btn" data-post="<?= $post["id"] ?>">👎 Dislike</button>
-            <span id="likes-<?= $post["id"] ?>"></span>
-            <span id="dislikes-<?= $post["id"] ?>"></span>
+    <div class="navbar">
+        <a href="feed.php" class="logo">SocialNet</a>
+        <div>
+            <a href="profile.php">My Profile</a>
+            <a href="logout.php">Logout</a>
         </div>
-    <?php endforeach; ?>
+    </div>
+
+    <div class="container">
+        <?php foreach ($posts as $post): ?>
+            <div class="post-card">
+                <div class="post-header">
+                    <img src="/social_network/uploads/<?= htmlspecialchars($post["profile_pic"]) ?>" alt="Profile Picture">
+                    <strong><?= htmlspecialchars($post["full_name"]) ?></strong>
+                </div>
+                <div class="post-content">
+                    <p><?= htmlspecialchars($post["description"]) ?></p>
+                    <?php if ($post["image"]): ?>
+                        <img src="/social_network/uploads/<?= htmlspecialchars($post["image"]) ?>" alt="Post Image">
+                    <?php endif; ?>
+                </div>
+                <div class="post-footer">
+                    <small>Posted on <?= date("F j, Y, g:i a", strtotime($post["created_at"])) ?></small>
+                </div>
+                <div class="post-actions">
+                    <button class="like-btn" data-post="<?= $post["id"] ?>">👍 Like</button>
+                    <span id="likes-<?= $post["id"] ?>"></span>
+                    <button class="dislike-btn" data-post="<?= $post["id"] ?>">👎 Dislike</button>
+                    <span id="dislikes-<?= $post["id"] ?>"></span>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
 
     <script>
     $(document).ready(function(){

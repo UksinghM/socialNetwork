@@ -11,12 +11,12 @@ $database = new Database();
 $db = $database->getConnection();
 $user_id = $_SESSION["user_id"];
 
-// Fetch user details
+// ✅ Fetch user details
 $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Handle profile update
+// ✅ Handle profile update
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["update_profile"])) {
     $name = $_POST["name"];
     $age = $_POST["age"];
@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["update_profile"])) {
     exit;
 }
 
-// Handle new post
+// ✅ Handle new post
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["add_post"])) {
     $description = $_POST["description"];
     $post_img = null;
@@ -52,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["add_post"])) {
     exit;
 }
 
-// Handle delete post
+// ✅ Handle delete post
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["delete_post"])) {
     $post_id = $_POST["delete_post_id"];
     $stmt = $db->prepare("DELETE FROM posts WHERE id=? AND user_id=?");
@@ -61,7 +61,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["delete_post"])) {
     exit;
 }
 
-// Fetch posts
+// ✅ Handle friend requests
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (isset($_POST["accept_friend"])) {
+        $stmt = $db->prepare("UPDATE friends SET status='accepted' WHERE id=?");
+        $stmt->execute([$_POST["request_id"]]);
+    }
+    if (isset($_POST["reject_friend"])) {
+        $stmt = $db->prepare("DELETE FROM friends WHERE id=?");
+        $stmt->execute([$_POST["request_id"]]);
+    }
+    header("Location: profile.php");
+    exit;
+}
+
+// ✅ Fetch posts with likes/dislikes count
 $stmt = $db->prepare("
     SELECT 
         posts.*,
@@ -75,6 +89,25 @@ $stmt = $db->prepare("
 ");
 $stmt->execute([$user_id]);
 $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// ✅ Fetch pending friend requests
+$stmt = $db->prepare("
+    SELECT friends.id, users.full_name, users.profile_pic 
+    FROM friends 
+    JOIN users ON friends.user_id = users.id 
+    WHERE friends.friend_id=? AND friends.status='pending'
+");
+$stmt->execute([$user_id]);
+$friend_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// ✅ Followers & Following count
+$stmt = $db->prepare("SELECT COUNT(*) FROM followers WHERE user_id=?");
+$stmt->execute([$user_id]);
+$followers_count = $stmt->fetchColumn();
+
+$stmt = $db->prepare("SELECT COUNT(*) FROM followers WHERE follower_id=?");
+$stmt->execute([$user_id]);
+$following_count = $stmt->fetchColumn();
 ?>
 
 <!DOCTYPE html>
@@ -84,117 +117,38 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         :root { --primary-color: #1877F2; --background-color: #f0f2f5; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: var(--background-color);
-            margin: 0;
-            padding: 0;
-        }
-        .navbar {
-            background: #fff;
-            padding: 0 20px;
-            border-bottom: 1px solid #ddd;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        .navbar a {
-            color: var(--primary-color);
-            text-decoration: none;
-            margin-left: 20px;
-            font-weight: bold;
-        }
+        body { font-family: Arial, sans-serif; background: var(--background-color); margin: 0; padding: 0; }
+        .navbar { background: #fff; padding: 0 20px; border-bottom: 1px solid #ddd; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; }
+        .navbar a { color: var(--primary-color); text-decoration: none; margin-left: 20px; font-weight: bold; }
         .navbar .logo { font-size: 24px; }
 
-        .profile-header {
-            background: #fff;
-            padding: 20px;
-            text-align: center;
-            border-bottom: 1px solid #ddd;
-        }
-        .profile-header img {
-            width: 160px;
-            height: 160px;
-            border-radius: 50%;
-            border: 4px solid #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 10px;
-        }
-        .profile-header h2 {
-            margin: 0;
-            font-size: 28px;
-        }
+        .profile-header { background: #fff; padding: 20px; text-align: center; border-bottom: 1px solid #ddd; }
+        .profile-header img { width: 160px; height: 160px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px; }
+        .profile-header h2 { margin: 0; font-size: 28px; }
+        .profile-header p { color: #555; margin-top: 8px; }
 
-        .container {
-            display: flex;
-            gap: 20px;
-            max-width: 1000px;
-            margin: 20px auto;
-            padding: 0 15px;
-        }
+        .container { display: flex; gap: 20px; max-width: 1000px; margin: 20px auto; padding: 0 15px; }
         .left-column { flex: 1; }
         .right-column { flex: 2; }
 
-        .card {
-            background: white;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-        }
-        .card h3 {
-            margin-top: 0;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+        .card h3 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+
         .about-info p { margin: 5px 0 15px; color: #333; }
         .about-info strong { color: #65676b; }
 
-        input[type="text"], input[type="number"], textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-sizing: border-box;
-        }
-        textarea { resize: vertical; }
-        button {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 15px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
+        input, textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; }
+        button { background: var(--primary-color); color: white; border: none; border-radius: 8px; padding: 8px 14px; font-weight: bold; cursor: pointer; }
         button:hover { background: #166fe5; }
 
-        .post-card {
-            background: white;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-        }
-        .post-content p { font-size: 15px; line-height: 1.5; margin: 0 0 15px 0; }
+        .post-card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+        .post-content p { margin: 0 0 15px 0; }
         .post-content img { max-width: 100%; border-radius: 10px; margin-top: 10px; }
         .post-footer { color: #65676b; font-size: 13px; margin-bottom: 10px; }
         .post-actions { display: flex; align-items: center; gap: 15px; border-top: 1px solid #eee; padding-top: 10px; }
-        .post-actions button, .post-actions form button {
-            background: none; border: none; cursor: pointer; font-size: 14px;
-            font-weight: bold; color: #65676b; padding: 0;
-        }
-        .post-actions button:hover, .post-actions form button:hover { text-decoration: underline; }
-        .post-actions span { font-size: 14px; color: #65676b; }
-        .post-actions form { display: inline; margin-left: auto; }
         .post-actions .delete-btn { color: #e74c3c; }
+        .friend-request { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .friend-request img { width: 40px; height: 40px; border-radius: 50%; }
     </style>
 </head>
 <body>
@@ -209,9 +163,12 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="profile-header">
         <img src="/social_network/uploads/<?= htmlspecialchars($user["profile_pic"]) ?>" alt="Profile Picture">
         <h2><?= htmlspecialchars($user["full_name"]) ?></h2>
+        <!-- ✅ Followers / Following -->
+        <p>👥 Followers: <?= $followers_count ?> | Following: <?= $following_count ?></p>
     </div>
 
     <div class="container">
+        <!-- ✅ Left column -->
         <div class="left-column">
             <div class="card">
                 <h3>About</h3>
@@ -230,8 +187,29 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <button type="submit" name="update_profile">Update Profile</button>
                 </form>
             </div>
+
+            <!-- ✅ Friend Requests -->
+            <div class="card">
+                <h3>Friend Requests</h3>
+                <?php if ($friend_requests): ?>
+                    <?php foreach ($friend_requests as $req): ?>
+                        <div class="friend-request">
+                            <img src="/social_network/uploads/<?= htmlspecialchars($req["profile_pic"]) ?>" alt="Profile">
+                            <span><?= htmlspecialchars($req["full_name"]) ?></span>
+                            <form method="POST" style="display:inline;">
+                                <input type="hidden" name="request_id" value="<?= $req["id"] ?>">
+                                <button type="submit" name="accept_friend">Accept</button>
+                                <button type="submit" name="reject_friend">Reject</button>
+                            </form>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p>No new requests</p>
+                <?php endif; ?>
+            </div>
         </div>
 
+        <!-- ✅ Right column -->
         <div class="right-column">
             <div class="card">
                 <h3>Create Post</h3>

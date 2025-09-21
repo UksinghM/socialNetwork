@@ -10,19 +10,19 @@ $message = "";
 $message_class = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = $_POST["name"];
-    $email = $_POST["email"];
-    $password = $_POST["password"];
-    $age = $_POST["age"];
-    $profile_pic = $_FILES["profile_pic"];
+    $name = $_POST["name"] ?? "";
+    $email = $_POST["email"] ?? "";
+    $password = $_POST["password"] ?? "";
+    $age = $_POST["age"] ?? 0;
+    $profile_pic = $_FILES["profile_pic"] ?? null;
 
     $result = $user->register($name, $email, $password, $age, $profile_pic);
 
-    if ($result === true) {
-        $message = "✅ Registration successful! You can now <a href='login.php'>Login</a>.";
+    if (is_array($result) && $result["status"] === "success") {
+        $message = $result["message"];
         $message_class = "success";
     } else {
-        $message = $result;
+        $message = is_array($result) ? $result["message"] : "❌ Something broke, fix it!";
         $message_class = "error";
     }
 }
@@ -31,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Signup</title>
+    <title>Signup, Loser!</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -103,21 +103,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
     <div class="container">
         <div class="card">
-            <h2>Create Account</h2>
+            <h2>Create Account, Don’t Screw It Up!</h2>
             <?php if($message): ?>
-                <p class="message <?= $message_class ?>"><?= $message ?></p>
+                <p class="message <?= htmlspecialchars($message_class) ?>"><?= $message ?></p>
             <?php endif; ?>
             <form method="POST" enctype="multipart/form-data">
-                <input type="text" name="name" placeholder="Full Name" required>
-                <input type="email" name="email" placeholder="Email Address" required>
-                <input type="password" name="password" placeholder="Password" required>
-                <input type="number" name="age" placeholder="Age" required>
-                <label for="profile_pic">Profile Picture (optional):</label>
-                <input type="file" id="profile_pic" name="profile_pic">
-                <button type="submit">Register</button>
+                <input type="text" name="name" placeholder="Full Name, Make It Good" required>
+                <input type="email" name="email" placeholder="Email, Don’t Mess It Up" required>
+                <input type="password" name="password" placeholder="Password, Keep It Secret" required>
+                <input type="number" name="age" placeholder="Age, Be Honest" required>
+                <label for="profile_pic">Profile Pic (JPG/PNG, Don’t Be Stupid):</label>
+                <input type="file" id="profile_pic" name="profile_pic" accept="image/jpeg,image/png,image/jpg">
+                <button type="submit">Register, You Fool!</button>
             </form>
             <div class="login-link">
-                <p>Already have an account? <a href="login.php">Login here</a></p>
+                <p>Got an account? <a href="login.php">Login, Lazy!</a></p>
             </div>
         </div>
     </div>

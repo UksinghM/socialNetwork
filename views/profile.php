@@ -24,8 +24,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["update_profile"])) {
     $profile_pic = $user["profile_pic"];
     if (!empty($_FILES["profile_pic"]["name"])) {
         $fileName = time() . "_" . basename($_FILES["profile_pic"]["name"]);
-        move_uploaded_file($_FILES["profile_pic"]["tmp_name"], __DIR__ . "/../uploads/" . $fileName);
-        $profile_pic = $fileName;
+        $uploadPath = __DIR__ . "/../uploads/" . $fileName;
+
+        if (move_uploaded_file($_FILES["profile_pic"]["tmp_name"], $uploadPath)) {
+            $profile_pic = $fileName;
+        }
     }
 
     $stmt = $db->prepare("UPDATE users SET full_name=?, age=?, profile_pic=? WHERE id=?");
@@ -43,7 +46,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["add_post"])) {
 
     if (!empty($_FILES["post_img"]["name"])) {
         $post_img = time() . "_" . basename($_FILES["post_img"]["name"]);
-        move_uploaded_file($_FILES["post_img"]["tmp_name"], __DIR__ . "/../uploads/" . $post_img);
+        $uploadPath = __DIR__ . "/../uploads/" . $post_img;
+
+        if (move_uploaded_file($_FILES["post_img"]["tmp_name"], $uploadPath)) {
+            // ✅ only save if upload worked
+        } else {
+            $post_img = null;
+        }
     }
 
     $stmt = $db->prepare("INSERT INTO posts (user_id, description, image) VALUES (?, ?, ?)");
@@ -128,6 +137,7 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .post img {
             margin-top: 10px;
             border-radius: 8px;
+            max-width: 100%;
         }
         .post small {
             color: gray;
@@ -155,7 +165,7 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <h2>Welcome, <?= htmlspecialchars($user["full_name"]) ?> 👋</h2>
             <p><strong>Email:</strong> <?= htmlspecialchars($user["email"]) ?></p>
             <p><strong>Age:</strong> <?= htmlspecialchars($user["age"]) ?></p>
-            <img src="../uploads/<?= htmlspecialchars($user["profile_pic"]) ?>" width="120" style="border-radius:50%; border:3px solid #007bff;">
+            <img src="/social_network/uploads/<?= htmlspecialchars($user["profile_pic"]) ?>" width="120" style="border-radius:50%; border:3px solid #007bff;">
         </div>
 
         <div class="card">
@@ -183,7 +193,7 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="post">
                     <p><?= htmlspecialchars($post["description"]) ?></p>
                     <?php if ($post["image"]): ?>
-                        <img src="../uploads/<?= htmlspecialchars($post["image"]) ?>" width="250"><br>
+                        <img src="/social_network/uploads/<?= htmlspecialchars($post["image"]) ?>" width="250"><br>
                     <?php endif; ?>
                     <small>Posted on <?= $post["created_at"] ?></small><br>
 

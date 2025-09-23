@@ -29,96 +29,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Signup, Loser!</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f9;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
-        .container {
-            width: 100%;
-            max-width: 500px;
-        }
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 20px;
-        }
-        input[type="text"],
-        input[type="email"],
-        input[type="password"],
-        input[type="number"],
-        input[type="file"] {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-        }
-        button:hover {
-            background: #218838;
-        }
-        .message {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: bold;
-        }
-        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .login-link { text-align: center; margin-top: 20px; }
-        .login-link a { color: #007bff; text-decoration: none; }
-        .login-link a:hover { text-decoration: underline; }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container">
-        <div class="card">
-            <h2>Create Account, Don’t Screw It Up!</h2>
-            <?php if($message): ?>
-                <p class="message <?= htmlspecialchars($message_class) ?>"><?= $message ?></p>
-            <?php endif; ?>
-            <form method="POST" enctype="multipart/form-data">
-                <input type="text" name="name" placeholder="Full Name, Make It Good" required>
-                <input type="email" name="email" placeholder="Email, Don’t Mess It Up" required>
-                <input type="password" name="password" placeholder="Password, Keep It Secret" required>
-                <input type="number" name="age" placeholder="Age, Be Honest" required>
-                <label for="profile_pic">Profile Pic (JPG/PNG, Don’t Be Stupid):</label>
-                <input type="file" id="profile_pic" name="profile_pic" accept="image/jpeg,image/png,image/jpg">
-                <button type="submit">Register, You Fool!</button>
-            </form>
-            <div class="login-link">
-                <p>Got an account? <a href="login.php">Login, Lazy!</a></p>
+<body class="min-h-screen flex items-center justify-center bg-cover bg-center" style="background-image: url('https://img.aelieve.com/wYiwMmE-No0-ThSP/w:auto/h:auto/q:74/https://cdn.aelieve.com/4441de38-social-media.jpg');">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div class="relative z-10 bg-white/90 p-12 rounded-2xl shadow-2xl max-w-xl w-full flex flex-col items-center">
+        <h2 class="text-5xl font-extrabold text-center text-gray-800 mb-10">Create Account, Don’t Screw It Up!</h2>
+        <?php if($message): ?>
+            <p class="text-center mb-8 text-xl font-semibold <?php echo $message_class === 'success' ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'; ?> px-6 py-3 rounded-lg"><?php echo $message; ?></p>
+        <?php endif; ?>
+        <form method="POST" enctype="multipart/form-data" class="space-y-8 w-full max-w-lg">
+            <div>
+                <label for="name" class="block text-xl font-semibold text-gray-700 text-center">Full Name, Make It Good</label>
+                <input type="text" name="name" id="name" required class="w-full px-6 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg" placeholder="Full Name, Make It Good">
             </div>
+            <div>
+                <label for="email" class="block text-xl font-semibold text-gray-700 text-center">Email, Don’t Mess It Up</label>
+                <input type="email" name="email" id="email" required class="w-full px-6 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg" placeholder="Email, Don’t Mess It Up">
+            </div>
+            <div>
+                <label for="password" class="block text-xl font-semibold text-gray-700 text-center">Password, Keep It Secret</label>
+                <input type="password" name="password" id="password" required class="w-full px-6 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg" placeholder="Password, Keep It Secret">
+            </div>
+            <div>
+                <label for="age" class="block text-xl font-semibold text-gray-700 text-center">Age, Be Honest</label>
+                <input type="number" name="age" id="age" required class="w-full px-6 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg" placeholder="Age, Be Honest">
+            </div>
+            <div>
+                <label for="profile_pic" class="block text-xl font-semibold text-gray-700 text-center">Profile Pic (JPG/PNG, Don’t Be Stupid)</label>
+                <input type="file" id="profile_pic" name="profile_pic" accept="image/jpeg,image/png,image/jpg" class="w-full px-6 py-4 text-gray-700 text-lg">
+            </div>
+            <button type="submit" class="w-full bg-green-600 text-white py-4 rounded-lg hover:bg-green-700 transition-colors text-xl font-bold">Register, You Fool!</button>
+        </form>
+        <div class="text-center mt-8">
+            <p class="text-lg text-gray-700">Got an account? <a href="login.php" class="text-blue-600 hover:underline font-semibold">Login, Lazy!</a></p>
         </div>
     </div>
 </body>

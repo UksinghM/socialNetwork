@@ -24,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["update_profile"])) {
     $profile_pic = $user["profile_pic"];
     if (!empty($_FILES["profile_pic"]["name"])) {
         $fileName = time() . "_" . basename($_FILES["profile_pic"]["name"]);
-        move_uploaded_file($_FILES["profile_pic"]["tmp_name"], __DIR__ . "/../uploads/" . $fileName);
+        move_uploaded_file($_FILES["profile_pic"]["tmp_name"], __DIR__ . "/../Uploads/" . $fileName);
         $profile_pic = $fileName;
     }
 
@@ -43,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["add_post"])) {
 
     if (!empty($_FILES["post_img"]["name"])) {
         $post_img = time() . "_" . basename($_FILES["post_img"]["name"]);
-        move_uploaded_file($_FILES["post_img"]["tmp_name"], __DIR__ . "/../uploads/" . $post_img);
+        move_uploaded_file($_FILES["post_img"]["tmp_name"], __DIR__ . "/../Uploads/" . $post_img);
     }
 
     $stmt = $db->prepare("INSERT INTO posts (user_id, description, image) VALUES (?, ?, ?)");
@@ -111,136 +111,106 @@ $following_count = $stmt->fetchColumn();
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        :root { --primary-color: #1877F2; --background-color: #f0f2f5; }
-        body { font-family: Arial, sans-serif; background: var(--background-color); margin: 0; padding: 0; }
-        .navbar { background: #fff; padding: 0 20px; border-bottom: 1px solid #ddd; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; }
-        .navbar a { color: var(--primary-color); text-decoration: none; margin-left: 20px; font-weight: bold; }
-        .navbar .logo { font-size: 24px; }
-
-        .profile-header { background: #fff; padding: 20px; text-align: center; border-bottom: 1px solid #ddd; }
-        .profile-header img { width: 160px; height: 160px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px; }
-        .profile-header h2 { margin: 0; font-size: 28px; }
-        .profile-header p { color: #555; margin-top: 8px; }
-
-        .container { display: flex; gap: 20px; max-width: 1000px; margin: 20px auto; padding: 0 15px; }
-        .left-column { flex: 1; }
-        .right-column { flex: 2; }
-
-        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
-        .card h3 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
-
-        .about-info p { margin: 5px 0 15px; color: #333; }
-        .about-info strong { color: #65676b; }
-
-        input, textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; }
-        button { background: var(--primary-color); color: white; border: none; border-radius: 8px; padding: 8px 14px; font-weight: bold; cursor: pointer; }
-        button:hover { background: #166fe5; }
-
-        .post-card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
-        .post-content p { margin: 0 0 15px 0; }
-        .post-content img { max-width: 100%; border-radius: 10px; margin-top: 10px; }
-        .post-footer { color: #65676b; font-size: 13px; margin-bottom: 10px; }
-        .post-actions { display: flex; align-items: center; gap: 15px; border-top: 1px solid #eee; padding-top: 10px; }
-        .post-actions .delete-btn { color: #e74c3c; }
-        .friend-request { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .friend-request img { width: 40px; height: 40px; border-radius: 50%; }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="navbar">
-        <a href="feed.php" class="logo">SocialNet</a>
-        <div>
-            <a href="feed.php">Feed</a>
-            <a href="logout.php">Logout</a>
+<body class="min-h-screen bg-cover bg-center flex flex-col" style="background-image: url('https://seeromega.com/wp-content/uploads/2016/09/social-networking-websites.jpg');">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+    
+    <!-- Navbar -->
+    <nav class="relative z-10 bg-white shadow-md p-4 flex justify-between items-center sticky top-0">
+        <a href="feed.php" class="text-2xl font-bold text-blue-600">SocialNet</a>
+        <div class="space-x-4">
+            <a href="feed.php" class="text-blue-600 font-semibold hover:text-blue-800">Feed</a>
+            <a href="logout.php" class="text-blue-600 font-semibold hover:text-blue-800">Logout</a>
         </div>
+    </nav>
+
+    <!-- Profile Header -->
+    <div class="relative z-10 max-w-4xl mx-auto mt-8 p-6 bg-white/90 rounded-xl shadow-xl text-center">
+        <img src="/social_network/uploads/<?= htmlspecialchars($user['profile_pic']) ?>" alt="Profile Picture" class="w-32 h-32 rounded-full border-4 border-white shadow-md mx-auto">
+        <h2 class="text-3xl font-bold text-gray-800 mt-4"><?= htmlspecialchars($user['full_name']) ?></h2>
+        <p class="text-gray-600 mt-2">👥 Followers: <?= $followers_count ?> | Following: <?= $following_count ?></p>
     </div>
 
-    <div class="profile-header">
-        <img src="/social_network/uploads/<?= htmlspecialchars($user["profile_pic"]) ?>" alt="Profile Picture">
-        <h2><?= htmlspecialchars($user["full_name"]) ?></h2>
-        <!-- ✅ Followers / Following -->
-        <p>👥 Followers: <?= $followers_count ?> | Following: <?= $following_count ?></p>
-    </div>
-
-    <div class="container">
-        <!-- ✅ Left column -->
-        <div class="left-column">
-            <div class="card">
-                <h3>About</h3>
-                <div class="about-info">
-                    <p><strong>Email:</strong> <?= htmlspecialchars($user["email"]) ?></p>
-                    <p><strong>Age:</strong> <?= htmlspecialchars($user["age"]) ?></p>
+    <!-- Main Content -->
+    <div class="relative z-10 max-w-4xl mx-auto mt-6 flex gap-6 px-4">
+        <!-- Left Column -->
+        <div class="w-1/3 space-y-6">
+            <div class="bg-white/90 p-6 rounded-xl shadow-md">
+                <h3 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">About</h3>
+                <div class="text-gray-700">
+                    <p><strong>Email:</strong> <?= htmlspecialchars($user['email']) ?></p>
+                    <p><strong>Age:</strong> <?= htmlspecialchars($user['age']) ?></p>
                 </div>
             </div>
 
-            <div class="card">
-                <h3>Edit Profile</h3>
-                <form method="POST" enctype="multipart/form-data">
-                    <input type="text" name="name" value="<?= htmlspecialchars($user["full_name"]) ?>" required>
-                    <input type="number" name="age" value="<?= htmlspecialchars($user["age"]) ?>" required>
-                    <input type="file" name="profile_pic">
-                    <button type="submit" name="update_profile">Update Profile</button>
+            <div class="bg-white/90 p-6 rounded-xl shadow-md">
+                <h3 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">Edit Profile</h3>
+                <form method="POST" enctype="multipart/form-data" class="space-y-4">
+                    <input type="text" name="name" value="<?= htmlspecialchars($user['full_name']) ?>" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="number" name="age" value="<?= htmlspecialchars($user['age']) ?>" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="file" name="profile_pic" class="w-full px-4 py-2">
+                    <button type="submit" name="update_profile" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">Update Profile</button>
                 </form>
             </div>
 
-            <!-- ✅ Friend Requests -->
-            <div class="card">
-                <h3>Friend Requests</h3>
+            <div class="bg-white/90 p-6 rounded-xl shadow-md">
+                <h3 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">Friend Requests</h3>
                 <?php if ($friend_requests): ?>
                     <?php foreach ($friend_requests as $req): ?>
-                        <div class="friend-request">
-                            <img src="/social_network/uploads/<?= htmlspecialchars($req["profile_pic"]) ?>" alt="Profile">
-                            <span><?= htmlspecialchars($req["full_name"]) ?></span>
-                            <form method="POST" style="display:inline;">
-                                <input type="hidden" name="request_id" value="<?= $req["id"] ?>">
-                                <button type="submit" name="accept_friend">Accept</button>
-                                <button type="submit" name="reject_friend">Reject</button>
+                        <div class="flex items-center gap-3 mb-3">
+                            <img src="/social_network/uploads/<?= htmlspecialchars($req['profile_pic']) ?>" alt="Profile" class="w-10 h-10 rounded-full">
+                            <span class="flex-1 text-gray-700"><?= htmlspecialchars($req['full_name']) ?></span>
+                            <form method="POST" class="flex gap-2">
+                                <input type="hidden" name="request_id" value="<?= $req['id'] ?>">
+                                <button type="submit" name="accept_friend" class="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600">Accept</button>
+                                <button type="submit" name="reject_friend" class="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600">Reject</button>
                             </form>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <p>No new requests</p>
+                    <p class="text-gray-600">No new requests</p>
                 <?php endif; ?>
             </div>
         </div>
 
-        <!-- ✅ Right column -->
-        <div class="right-column">
-            <div class="card">
-                <h3>Create Post</h3>
-                <form method="POST" enctype="multipart/form-data">
-                    <textarea name="description" placeholder="What's on your mind?" required></textarea>
-                    <input type="file" name="post_img">
-                    <button type="submit" name="add_post">Post</button>
+        <!-- Right Column -->
+        <div class="w-2/3 space-y-6">
+            <div class="bg-white/90 p-6 rounded-xl shadow-md">
+                <h3 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">Create Post</h3>
+                <form method="POST" enctype="multipart/form-data" class="space-y-4">
+                    <textarea name="description" placeholder="What's on your mind?" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    <input type="file" name="post_img" class="w-full px-4 py-2">
+                    <button type="submit" name="add_post" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">Post</button>
                 </form>
             </div>
 
-            <h3>Your Posts</h3>
+            <h3 class="text-xl font-semibold text-gray-800">Your Posts</h3>
             <?php foreach ($posts as $post): ?>
-                <div class="post-card">
-                    <div class="post-content">
-                        <p><?= htmlspecialchars($post["description"]) ?></p>
-                        <?php if ($post["image"]): ?>
-                            <img src="/social_network/uploads/<?= htmlspecialchars($post["image"]) ?>" alt="Post Image">
+                <div class="bg-white/90 p-6 rounded-xl shadow-md">
+                    <div class="text-gray-700">
+                        <p><?= htmlspecialchars($post['description']) ?></p>
+                        <?php if ($post['image']): ?>
+                            <img src="/social_network/uploads/<?= htmlspecialchars($post['image']) ?>" alt="Post Image" class="max-w-full rounded-lg mt-4">
                         <?php endif; ?>
                     </div>
-                    <div class="post-footer">
-                        <small>Posted on <?= date("F j, Y, g:i a", strtotime($post["created_at"])) ?></small>
+                    <div class="text-gray-500 text-sm mt-2">
+                        Posted on <?= date('F j, Y, g:i a', strtotime($post['created_at'])) ?>
                     </div>
-                    <div class="post-actions">
-                        <button class="like-btn" data-post="<?= $post["id"] ?>">👍 Like</button>
-                        <span id="likes-<?= $post["id"] ?>"><?= $post['likes'] ?></span>
-                        <button class="dislike-btn" data-post="<?= $post["id"] ?>">👎 Dislike</button>
-                        <span id="dislikes-<?= $post["id"] ?>"><?= $post['dislikes'] ?></span>
-                        
-                        <form method="POST">
-                            <input type="hidden" name="delete_post_id" value="<?= $post["id"] ?>">
-                            <button type="submit" name="delete_post" class="delete-btn">Delete</button>
+                    <div class="flex items-center gap-4 mt-4 pt-2 border-t">
+                        <button class="like-btn text-blue-600 hover:text-blue-800" data-post="<?= $post['id'] ?>">👍 Like</button>
+                        <span id="likes-<?= $post['id'] ?>"><?= $post['likes'] ?></span>
+                        <button class="dislike-btn text-blue-600 hover:text-blue-800" data-post="<?= $post['id'] ?>">👎 Dislike</button>
+                        <span id="dislikes-<?= $post['id'] ?>"><?= $post['dislikes'] ?></span>
+                        <form method="POST" class="ml-auto">
+                            <input type="hidden" name="delete_post_id" value="<?= $post['id'] ?>">
+                            <button type="submit" name="delete_post" class="text-red-500 hover:text-red-700">Delete</button>
                         </form>
                     </div>
                 </div>
